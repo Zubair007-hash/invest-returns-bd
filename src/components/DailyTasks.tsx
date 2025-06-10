@@ -133,7 +133,11 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ onTasksComplete }) => {
             });
           }
 
-          const updatedTask: Task = { ...t, progress: newProgress, completed: isCompleted };
+          const updatedTask: ProgressTask = { 
+            ...t, 
+            progress: newProgress, 
+            completed: isCompleted 
+          };
           return updatedTask;
         }
         return t;
