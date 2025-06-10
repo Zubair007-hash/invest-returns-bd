@@ -7,8 +7,34 @@ import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, Circle, Play, Users, Share2, Gift, Eye, LogIn, Clock } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
-const DailyTasks = ({ onTasksComplete }) => {
-  const [tasks, setTasks] = useState([
+interface BaseTask {
+  id: number;
+  title: string;
+  description: string;
+  reward: number;
+  icon: React.ComponentType<any>;
+  completed: boolean;
+  required: boolean;
+}
+
+interface SimpleTask extends BaseTask {
+  progress?: never;
+  total?: never;
+}
+
+interface ProgressTask extends BaseTask {
+  progress: number;
+  total: number;
+}
+
+type Task = SimpleTask | ProgressTask;
+
+interface DailyTasksProps {
+  onTasksComplete: (isComplete: boolean) => void;
+}
+
+const DailyTasks: React.FC<DailyTasksProps> = ({ onTasksComplete }) => {
+  const [tasks, setTasks] = useState<Task[]>([
     {
       id: 1,
       title: 'দৈনিক লগইন',
@@ -69,10 +95,10 @@ const DailyTasks = ({ onTasksComplete }) => {
     onTasksComplete(requiredTasks === totalRequired);
   }, [requiredTasks, totalRequired, onTasksComplete]);
 
-  const handleCompleteTask = (taskId) => {
+  const handleCompleteTask = (taskId: number) => {
     setTasks(prev => prev.map(task => {
       if (task.id === taskId && !task.completed) {
-        const updatedTask = { ...task, completed: true };
+        const updatedTask: Task = { ...task, completed: true };
         
         toast({
           title: "কাজ সম্পন্ন!",
@@ -86,11 +112,11 @@ const DailyTasks = ({ onTasksComplete }) => {
     }));
   };
 
-  const handleWatchAd = (taskId) => {
+  const handleWatchAd = (taskId: number) => {
     const task = tasks.find(t => t.id === taskId);
-    if (task && task.progress < task.total) {
+    if (task && 'progress' in task && 'total' in task && task.progress < task.total) {
       setTasks(prev => prev.map(t => {
-        if (t.id === taskId) {
+        if (t.id === taskId && 'progress' in t && 'total' in t) {
           const newProgress = t.progress + 1;
           const isCompleted = newProgress >= t.total;
           
@@ -107,7 +133,8 @@ const DailyTasks = ({ onTasksComplete }) => {
             });
           }
 
-          return { ...t, progress: newProgress, completed: isCompleted };
+          const updatedTask: Task = { ...t, progress: newProgress, completed: isCompleted };
+          return updatedTask;
         }
         return t;
       }));
@@ -183,6 +210,8 @@ const DailyTasks = ({ onTasksComplete }) => {
       <div className="space-y-4">
         {tasks.map((task) => {
           const Icon = task.icon;
+          const hasProgress = 'progress' in task && 'total' in task;
+          
           return (
             <Card key={task.id} className={`transition-all duration-200 ${
               task.completed ? 'bg-green-50 border-green-200' : 'hover:shadow-md'
@@ -209,7 +238,7 @@ const DailyTasks = ({ onTasksComplete }) => {
                       </div>
                       <p className="text-sm text-gray-600">{task.description}</p>
                       
-                      {task.progress !== undefined && (
+                      {hasProgress && (
                         <div className="mt-2">
                           <Progress value={(task.progress / task.total) * 100} className="h-2" />
                           <p className="text-xs text-gray-500 mt-1">
@@ -238,7 +267,7 @@ const DailyTasks = ({ onTasksComplete }) => {
                         }}
                         className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
                       >
-                        {task.id === 2 && task.progress < task.total ? (
+                        {task.id === 2 && hasProgress && task.progress < task.total ? (
                           <>
                             <Play className="w-4 h-4 mr-1" />
                             দেখুন
