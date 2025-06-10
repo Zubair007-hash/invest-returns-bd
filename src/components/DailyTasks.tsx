@@ -116,7 +116,7 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ onTasksComplete }) => {
     const task = tasks.find(t => t.id === taskId);
     if (task && 'progress' in task && 'total' in task && task.progress < task.total) {
       setTasks(prev => prev.map(t => {
-        if (t.id === taskId && 'progress' in t && 'total' in t) {
+        if (t.id === taskId && 'progress' in t && 'total' in t && t.progress !== undefined && t.total !== undefined) {
           const newProgress = t.progress + 1;
           const isCompleted = newProgress >= t.total;
           
@@ -133,12 +133,13 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ onTasksComplete }) => {
             });
           }
 
-          const updatedTask: ProgressTask = { 
+          // Ensure we return a proper ProgressTask
+          return { 
             ...t, 
             progress: newProgress, 
+            total: t.total,
             completed: isCompleted 
-          };
-          return updatedTask;
+          } as ProgressTask;
         }
         return t;
       }));
